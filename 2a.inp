@@ -1,0 +1,64 @@
+VARIABLE: NAMES =
+  negB
+  neg12
+  neg24
+  cogB
+  cog12
+  cog24
+  ;
+
+  MISSING ARE ALL (-99);
+
+  USEVARIABLES=
+  negB neg12 neg24 cogb cog12 cog24;
+
+  ANALYSIS:
+  ESTIMATOR=MLR; !maximum likelihood robust estimator
+  MODEL=NOCOV; !exog variables no longer correlated by default
+
+
+  MODEL:
+
+  !creating within-person centered LVs
+  LVcogB BY cogB@1;
+  LVcog12 BY cog12@1;
+  LVcog24 BY cog24@1;
+  LVnegB BY negB@1;
+  LVneg12 BY neg12@1;
+  LVneg24 BY neg24@1;
+
+  !measurement error vars;
+  negB-cog24@0;
+
+  !covariances within wave
+  LVcogB WITH LVnegb;
+  LVcog12 WITH LVneg12;
+  LVcog24 WITH LVneg24;
+
+  !RI for NS
+  RIneg BY negB@1 neg12@1 neg24@1;
+
+  !RI for cog
+  !RIcog By cogB@1 cog12@1 cog24@1;
+
+  ! Estimate covariance between random intercepts
+  !RIneg WITH RIcog;
+
+  !autoregressions
+  LVcog12 ON LVcogB ;!(AR1);
+  LVcog24 ON LVcog12 ;!(AR1);
+  LVneg12 ON LVnegB ;!(AR2);
+  LVneg24 ON LVneg12 ;!(AR2);
+
+  !crosslags
+  LVcog12 ON LVnegB (CL1);
+  LVneg12 ON LVcogB (CL2);
+  LVcog24 ON LVneg12 (CL1); ! same labels sets paths to =
+  LVneg24 ON LVcog12 (CL2);
+
+  OUTPUT:
+  SAMPSTAT !sample statistics
+  STDYX !standardized solution
+  MODINDICES (3.84) !modifications that would sig improve model chi^2
+  SVALUES !starting values
+  ;
